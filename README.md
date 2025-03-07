@@ -1,4 +1,4 @@
-# Zigzaw gold
+# Slot machine
 
 A Pen created on CodePen.
 
