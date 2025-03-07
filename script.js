@@ -1,77 +1,42 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const gridSize = 6;
-  const tileSize = 70;
-  let correctTiles = 0;
-  const totalTiles = gridSize * gridSize;
+/* script.js */
+const products = [
+    "🍎 Apple", "🍌 Banana", "🍇 Grapes", "🍉 Watermelon", "🍍 Pineapple",
+    "🥑 Avocado", "🥕 Carrot", "🌽 Corn", "🥦 Broccoli", "🍒 Cherry",
+    "🥭 Mango", "🍑 Peach", "🍐 Pear", "🍊 Orange", "🍓 Strawberry",
+    "🥔 Potato", "🍆 Eggplant", "🧄 Garlic", "🧅 Onion", "🌶️ Chili"
+];
 
-  const grid = document.getElementById("grid");
-  const tileGrid = document.getElementById("tile-grid");
-  const winnerText = document.getElementById("winner");
+const slotDisplay = document.getElementById("slot-display");
+const startButton = document.getElementById("start-button");
+let isRunning = false;
+let interval;
 
-  if (!grid || !tileGrid || !winnerText) {
-    console.error("Missing grid elements. Check your HTML.");
-    return;
-  }
+function getRandomSpeed() {
+    return Math.random() * (150 - 50) + 50; // Speed varies between 50ms and 150ms
+}
 
-  let tiles = [];
-
-  let positions = [];
-  for (let row = 0; row < gridSize; row++) {
-    for (let col = 0; col < gridSize; col++) {
-      positions.push({ row, col });
+function startSlotMachine() {
+    if (isRunning) return;
+    isRunning = true;
+    startButton.disabled = true;
+    slotDisplay.textContent = "Starting...";
+    
+    let index = 0;
+    function cycleImages() {
+        slotDisplay.textContent = products[index];
+        index = (index + 1) % products.length;
+        interval = setTimeout(cycleImages, getRandomSpeed());
     }
-  }
-  positions.sort(() => Math.random() - 0.5);
+    cycleImages();
+}
 
-  for (let i = 0; i < positions.length; i++) {
-    let { row, col } = positions[i];
-    let tile = document.createElement("div");
-    tile.classList.add("tile");
-    tile.style.backgroundPosition = `-${col * tileSize}px -${row * tileSize}px`;
-    tile.dataset.correctPosition = `${row}-${col}`;
-    tile.draggable = true;
+function stopSlotMachine() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearTimeout(interval);
+    startButton.disabled = false;
+}
 
-    tile.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", tile.dataset.correctPosition);
-    });
-
-    tiles.push(tile);
-  }
-
-  // Shuffle and append tiles to tile grid
-  tiles.sort(() => Math.random() - 0.5);
-  tiles.forEach((tile) => tileGrid.appendChild(tile));
-
-  // Create drop zones in the puzzle grid
-  for (let row = 0; row < gridSize; row++) {
-    for (let col = 0; col < gridSize; col++) {
-      let dropZone = document.createElement("div");
-      dropZone.style.width = `${tileSize}px`;
-      dropZone.style.height = `${tileSize}px`;
-      dropZone.dataset.targetPosition = `${row}-${col}`;
-      dropZone.addEventListener("dragover", (e) => e.preventDefault());
-
-      dropZone.addEventListener("drop", (e) => {
-        let draggedPos = e.dataTransfer.getData("text/plain");
-        let draggedTile = tiles.find(
-          (t) => t.dataset.correctPosition === draggedPos
-        );
-
-        if (draggedTile && draggedPos === dropZone.dataset.targetPosition) {
-          dropZone.appendChild(draggedTile);
-          draggedTile.style.position = "static";
-          draggedTile.classList.add("blinking");
-          setTimeout(() => draggedTile.classList.remove("blinking"), 1000);
-          correctTiles++;
-
-          if (correctTiles === totalTiles) {
-            winnerText.style.display = "block";
-            winnerText.style.animation = "winner-blink 0.5s 5 alternate";
-          }
-        }
-      });
-
-      grid.appendChild(dropZone);
-    }
-  }
-});
+startButton.addEventListener("click", startSlotMachine);
+document.body.addEventListener("click", stopSlotMachine);
+document.body.addEventListener("touchstart", stopSlotMachine);
